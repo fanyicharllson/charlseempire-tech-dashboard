@@ -1,0 +1,42 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
+class CloudinaryService {
+  static const String _cloudName = 'dxfnw5mkl';
+  static const String _uploadPreset = 'phonkers_profile_upload';
+
+  /// Upload image to Cloudinary and return the secure URL
+  static Future<String?> uploadImage(File imageFile) async {
+    try {
+      final uri = Uri.parse(
+        'https://api.cloudinary.com/v1_1/$_cloudName/image/upload',
+      );
+
+      final request = http.MultipartRequest('POST', uri)
+        ..fields['upload_preset'] = _uploadPreset
+        ..files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+
+      final response = await request.send();
+
+      if (response.statusCode == 200) {
+        final resStr = await response.stream.bytesToString();
+        final Map<String, dynamic> resJson = json.decode(resStr);
+        return resJson['secure_url'] as String?;
+      } else {
+        throw Exception('Upload failed with status ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Cloudinary upload error: $e');
+      rethrow;
+    }
+  }
+
+  /// Delete image from Cloudinary (optional - requires your API credentials)
+  static Future<bool> deleteImage(String publicId) async {
+    // This requires API key and secret - implement if needed
+    // For now, we'll just return true as images on free tier can stay
+    return true;
+  }
+}

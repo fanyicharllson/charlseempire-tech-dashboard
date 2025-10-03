@@ -18,9 +18,9 @@ export const metadata: Metadata = {
   description:
     "A comprehensive software management dashboard built with Next.js for efficiently managing and monitoring software applications, deployments, and technical operations",
   icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon.ico',
-    apple: '/favicon.ico',
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
   },
 };
 
