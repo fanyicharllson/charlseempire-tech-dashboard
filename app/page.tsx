@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import LoadingScreen from "./components/loading-screen";
+import LoadingScreen from "./components/ui/loading-screen";
 
 export default async function Home() {
   const { userId } = await auth();
