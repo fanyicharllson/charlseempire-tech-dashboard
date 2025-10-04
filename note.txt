@@ -80,3 +80,248 @@ export default async function DashboardPage() {
   );
 }
 
+
+
+
+
+
+
+"use client";
+
+import type React from "react";
+
+import { useState } from "react";
+import { Upload, ImageIcon } from "lucide-react";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Textarea } from "../ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { useToast } from "../ui/use-toast";
+
+interface UploadModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function UploadModal({ open, onOpenChange }: UploadModalProps) {
+  const { toast } = useToast();
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    version: "",
+    category: "",
+    price: "",
+    platform: [] as string[],
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Handle form submission
+    console.log("Form submitted:", formData);
+    toast({
+      title: "Success!",
+      description: `${formData.name || 'Software'} uploaded successfully!`,
+      className: "bg-blue-500 text-white",
+      duration: 4000
+      
+    });
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] bg-slate-900 border-slate-700 text-slate-100 flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="text-xl text-blue-400">
+            Upload New Software
+          </DialogTitle>
+          <DialogDescription className="text-slate-400">
+            Fill in the details to add new software to your library
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="overflow-y-auto pr-2">
+          <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-slate-300">
+                  Software Name
+                </Label>
+                <Input
+                  id="name"
+                  placeholder="Enter software name"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  className="bg-slate-800 border-slate-700 text-slate-100"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="version" className="text-slate-300">
+                  Version
+                </Label>
+                <Input
+                  id="version"
+                  placeholder="e.g., 1.0.0"
+                  value={formData.version}
+                  onChange={(e) =>
+                    setFormData({ ...formData, version: e.target.value })
+                  }
+                  className="bg-slate-800 border-slate-700 text-slate-100"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-slate-300">
+                Description
+              </Label>
+              <Textarea
+                id="description"
+                placeholder="Describe the software..."
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                className="bg-slate-800 border-slate-700 text-slate-100 min-h-[100px]"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="category" className="text-slate-300">
+                  Category
+                </Label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, category: value })
+                  }
+                >
+                  <SelectTrigger className="bg-slate-800 border-slate-700 text-slate-100">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-slate-700">
+                    <SelectItem value="productivity">Productivity</SelectItem>
+                    <SelectItem value="development">Development</SelectItem>
+                    <SelectItem value="design">Design</SelectItem>
+                    <SelectItem value="utilities">Utilities</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="price" className="text-slate-300">
+                  Price (USD)
+                </Label>
+                <Input
+                  id="price"
+                  type="number"
+                  placeholder="0 for free"
+                  value={formData.price}
+                  onChange={(e) =>
+                    setFormData({ ...formData, price: e.target.value })
+                  }
+                  className="bg-slate-800 border-slate-700 text-slate-100"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-slate-300">Platform</Label>
+              <div className="flex gap-4">
+                {["Windows", "Mac", "Linux"].map((platform) => (
+                  <label
+                    key={platform}
+                    className="flex items-center space-x-2 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={formData.platform.includes(platform)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFormData({
+                            ...formData,
+                            platform: [...formData.platform, platform],
+                          });
+                        } else {
+                          setFormData({
+                            ...formData,
+                            platform: formData.platform.filter(
+                              (p) => p !== platform
+                            ),
+                          });
+                        }
+                      }}
+                      className="rounded border-slate-700 bg-slate-800"
+                    />
+                    <span className="text-sm text-slate-300">{platform}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-slate-300">Software Image</Label>
+              <div className="border-2 border-dashed border-slate-700 rounded-lg p-6 text-center hover:border-blue-500 transition-colors cursor-pointer">
+                <ImageIcon className="h-8 w-8 text-slate-500 mx-auto mb-2" />
+                <p className="text-sm text-slate-400">
+                  Click to upload or drag and drop
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  PNG, JPG up to 5MB
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-slate-300">Download File</Label>
+              <div className="border-2 border-dashed border-slate-700 rounded-lg p-6 text-center hover:border-blue-500 transition-colors cursor-pointer">
+                <Upload className="h-8 w-8 text-slate-500 mx-auto mb-2" />
+                <p className="text-sm text-slate-400">
+                  Click to upload software file
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  ZIP, EXE, DMG, etc.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                className="border-slate-700 text-slate-300 hover:bg-slate-800"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Upload Software
+              </Button>
+            </div>
+          </form>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
