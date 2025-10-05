@@ -1,17 +1,10 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import {
-  LayoutDashboard,
-  Package,
-  Upload,
-  FolderTree,
-  BarChart3,
-  Settings,
-  type LucideIcon,
-} from "lucide-react";
+import { type LucideIcon } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
+import { navItems } from "@/lib/navItems";
 
 interface NavItemProps {
   icon: LucideIcon;
@@ -34,7 +27,7 @@ function NavItem({ icon: Icon, label, href, active, onClick }: NavItemProps) {
 
   return (
     <Button
-    variant='ghost'
+      variant="ghost"
       onClick={handleClick}
       className={`w-full justify-start ${
         active
@@ -50,41 +43,6 @@ function NavItem({ icon: Icon, label, href, active, onClick }: NavItemProps) {
 
 export function DashboardSidebar() {
   const pathname = usePathname();
-
-  // Navigation items configuration
-  const navItems = [
-    {
-      icon: LayoutDashboard,
-      label: "Dashboard",
-      href: "/dashboard",
-    },
-    {
-      icon: Package,
-      label: "Software Library",
-      href: "/software-library",
-    },
-    {
-      icon: Upload,
-      label: "Upload Software",
-      href: "/upload",
-    },
-    {
-      icon: FolderTree,
-      label: "Categories",
-      href: "/categories",
-    },
-    {
-      icon: BarChart3,
-      label: "Analytics",
-      href: "/analytics",
-    },
-    {
-      icon: Settings,
-      label: "Settings",
-      href: "/settings",
-    },
-  ];
-
   return (
     <Card className="bg-slate-900/50 border-slate-700/50 md:min-h-screen h-full">
       <CardContent className="p-4">

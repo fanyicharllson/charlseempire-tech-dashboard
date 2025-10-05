@@ -17,6 +17,7 @@ interface SoftwareCardProps {
   software: Software;
   onDelete?: (id: string) => void;
   onEdit?: (id: string) => void;
+  onSeeDetails?: (id: string) => void;
   viewMode?: "grid" | "list";
 }
 
@@ -24,6 +25,7 @@ export function SoftwareCard({
   software,
   onDelete,
   onEdit,
+  onSeeDetails,
   viewMode = "grid",
 }: SoftwareCardProps) {
   if (viewMode === "list") {
@@ -68,7 +70,10 @@ export function SoftwareCard({
                       align="end"
                       className="bg-slate-800 border-slate-700"
                     >
-                      <DropdownMenuItem className="text-slate-300 hover:text-slate-100 hover:bg-slate-700 cursor-pointer">
+                      <DropdownMenuItem
+                        onClick={() => onSeeDetails?.(software.id)}
+                        className="text-slate-300 hover:text-slate-100 hover:bg-slate-700 cursor-pointer"
+                      >
                         <Eye className="h-4 w-4 mr-2" />
                         View Details
                       </DropdownMenuItem>
@@ -149,7 +154,10 @@ export function SoftwareCard({
                 align="end"
                 className="bg-slate-800 border-slate-700"
               >
-                <DropdownMenuItem className="text-slate-300 hover:text-slate-100 hover:bg-slate-700 cursor-pointer">
+                <DropdownMenuItem
+                  onClick={() => onSeeDetails?.(software.id)}
+                  className="text-slate-300 hover:text-slate-100 hover:bg-slate-700 cursor-pointer"
+                >
                   <Eye className="h-4 w-4 mr-2" />
                   View Details
                 </DropdownMenuItem>

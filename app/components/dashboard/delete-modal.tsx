@@ -62,10 +62,9 @@ export function DeleteModal({
         <DialogFooter className="gap-2 sm:gap-0 mt-4">
           <Button
             type="button"
-            variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isDeleting}
-            className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-slate-100"
+            className="text-white hover:bg-blue-700 bg-blue-500 transition-colors duration-300"
           >
             Cancel
           </Button>

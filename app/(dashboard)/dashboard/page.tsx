@@ -27,6 +27,7 @@ import { useSoftware, useDeleteSoftware } from "@/hooks/use-software";
 import { formatNumber } from "@/lib/utils";
 import { useToast } from "@/app/components/ui/use-toast";
 import type { Software } from "@/types/software";
+import { SoftwareDetailModal } from "@/app/components/dashboard/software-detail-modal";
 
 export default function Dashboard() {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
@@ -35,6 +36,10 @@ export default function Dashboard() {
     null
   );
   const [editingSoftware, setEditingSoftware] = useState<Software | null>(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedSoftware, setSelectedSoftware] = useState<Software | null>(
+    null
+  );
   const { toast } = useToast();
 
   // Fetch software data
@@ -80,6 +85,14 @@ export default function Dashboard() {
         description: error.message || "Failed to delete software",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleViewDetails = (id: string) => {
+    const item = software?.find((s) => s.id === id);
+    if (item) {
+      setSelectedSoftware(item);
+      setDetailModalOpen(true);
     }
   };
 
@@ -194,6 +207,7 @@ export default function Dashboard() {
                           onDelete={handleDeleteClick}
                           viewMode="list"
                           onEdit={handleEdit}
+                          onSeeDetails={handleViewDetails}
                         />
                       ))}
 
@@ -289,6 +303,15 @@ export default function Dashboard() {
         onConfirm={handleConfirmDelete}
         isDeleting={deleteSoftware.isPending}
         itemName={softwareToDelete?.name}
+      />
+      {/* software detail modal */}
+      <SoftwareDetailModal
+        open={detailModalOpen}
+        onOpenChange={setDetailModalOpen}
+        software={selectedSoftware}
+        showActions={true} // false for public pages
+        onEdit={handleEdit}
+        onDelete={handleDeleteClick}
       />
     </div>
   );

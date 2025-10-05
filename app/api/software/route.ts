@@ -4,14 +4,8 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
 import { softwareSchema } from "@/lib/validations";
 import { uploadImage, cleanupImage } from "@/lib/cloudinary";
+import { generateSlug } from "@/lib/generate-slug";
 
-// Helper: Generate slug from name
-function generateSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
 
 // POST: Create new software
 export async function POST(request: Request) {

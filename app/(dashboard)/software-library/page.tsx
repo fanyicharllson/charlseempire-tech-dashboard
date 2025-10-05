@@ -20,6 +20,7 @@ import { useSoftware, useDeleteSoftware } from "@/hooks/use-software";
 import { useToast } from "@/app/components/ui/use-toast";
 import type { Software } from "@/types/software";
 import { UploadModal } from "@/app/components/dashboard/upload-modal";
+import { SoftwareDetailModal } from "@/app/components/dashboard/software-detail-modal";
 
 export default function SoftwareLibraryPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -31,6 +32,10 @@ export default function SoftwareLibraryPage() {
   );
   const [editingSoftware, setEditingSoftware] = useState<Software | null>(null);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedSoftware, setSelectedSoftware] = useState<Software | null>(
+    null
+  );
 
   const { toast } = useToast();
   const { data: software, isLoading, isError, error } = useSoftware();
@@ -94,6 +99,14 @@ export default function SoftwareLibraryPage() {
     if (item) {
       setEditingSoftware(item);
       setUploadModalOpen(true);
+    }
+  };
+
+  const handleViewDetails = (id: string) => {
+    const item = software?.find((s) => s.id === id);
+    if (item) {
+      setSelectedSoftware(item);
+      setDetailModalOpen(true);
     }
   };
 
@@ -234,6 +247,7 @@ export default function SoftwareLibraryPage() {
                       viewMode={viewMode}
                       onDelete={handleDeleteClick}
                       onEdit={handleEdit}
+                      onSeeDetails={handleViewDetails}
                     />
                   ))}
                 </div>
@@ -300,6 +314,7 @@ export default function SoftwareLibraryPage() {
         itemName={softwareToDelete?.name}
       />
 
+      {/* Upload and edit modal */}
       <UploadModal
         open={uploadModalOpen}
         onOpenChange={(open) => {
@@ -307,6 +322,15 @@ export default function SoftwareLibraryPage() {
           if (!open) setEditingSoftware(null);
         }}
         software={editingSoftware}
+      />
+      {/* software detail modal */}
+      <SoftwareDetailModal
+        open={detailModalOpen}
+        onOpenChange={setDetailModalOpen}
+        software={selectedSoftware}
+        showActions={true} // false for public pages
+        onEdit={handleEdit}
+        onDelete={handleDeleteClick}
       />
     </div>
   );
