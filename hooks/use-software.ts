@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Software, CreateSoftwarePayload } from "@/types/software";
 
-// Fetch all software
+//! Fetch all software
 export function useSoftware() {
   return useQuery<Software[]>({
     queryKey: ["software"],
@@ -13,7 +13,7 @@ export function useSoftware() {
   });
 }
 
-// Create software mutation
+//! Create software mutation
 export function useCreateSoftware() {
   const queryClient = useQueryClient();
 
@@ -50,7 +50,49 @@ export function useCreateSoftware() {
   });
 }
 
-// Delete software mutation
+//! Update software mutation
+export function useUpdateSoftware() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: CreateSoftwarePayload;
+    }) => {
+      const formData = new FormData();
+      formData.append("name", data.name);
+      formData.append("description", data.description);
+      formData.append("version", data.version);
+      formData.append("category", data.category);
+      formData.append("price", data.price);
+      formData.append("platform", JSON.stringify(data.platform));
+
+      if (data.image) {
+        formData.append("image", data.image);
+      }
+
+      const res = await fetch(`/api/software/${id}`, {
+        method: "PUT",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to update software");
+      }
+
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["software"] });
+    },
+  });
+}
+
+//! Delete software mutation
 export function useDeleteSoftware() {
   const queryClient = useQueryClient();
 

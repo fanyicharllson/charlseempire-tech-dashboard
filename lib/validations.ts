@@ -9,7 +9,10 @@ export const softwareSchema = z.object({
   description: z
     .string()
     .min(10, "Description must be at least 10 characters")
-    .max(1000, "Description too long! please your description must be less than 1000 characters"),
+    .max(
+      1000,
+      "Description too long! please your description must be less than 1000 characters"
+    ),
   version: z
     .string()
     .min(1, "Version is required")
@@ -20,8 +23,18 @@ export const softwareSchema = z.object({
   }),
   platform: z.array(z.string()).min(1, "Select at least one platform"),
   image: z
-    .instanceof(File)
+    .union([
+      z.instanceof(File),
+      z.string().length(0), // Accept empty string
+      z.null(),
+    ])
     .optional()
+    .transform((val) => {
+      // Convert empty string to undefined
+      if (typeof val === "string" && val === "") return undefined;
+      if (!val) return undefined;
+      return val as File;
+    })
     .refine(
       (file) => !file || file.size <= 5 * 1024 * 1024,
       "Image must be less than 5MB"

@@ -19,6 +19,7 @@ import {
 import { useSoftware, useDeleteSoftware } from "@/hooks/use-software";
 import { useToast } from "@/app/components/ui/use-toast";
 import type { Software } from "@/types/software";
+import { UploadModal } from "@/app/components/dashboard/upload-modal";
 
 export default function SoftwareLibraryPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,6 +29,8 @@ export default function SoftwareLibraryPage() {
   const [softwareToDelete, setSoftwareToDelete] = useState<Software | null>(
     null
   );
+  const [editingSoftware, setEditingSoftware] = useState<Software | null>(null);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
   const { toast } = useToast();
   const { data: software, isLoading, isError, error } = useSoftware();
@@ -86,6 +89,14 @@ export default function SoftwareLibraryPage() {
     }
   };
 
+  const handleEdit = (id: string) => {
+    const item = software?.find((s) => s.id === id);
+    if (item) {
+      setEditingSoftware(item);
+      setUploadModalOpen(true);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-black to-slate-900 text-slate-100">
       <div className="container mx-auto p-4">
@@ -134,7 +145,9 @@ export default function SoftwareLibraryPage() {
                       <SelectValue placeholder="Category" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-900 border-slate-700">
-                      <SelectItem value="all" className="text-white">All Categories</SelectItem>
+                      <SelectItem value="all" className="text-white">
+                        All Categories
+                      </SelectItem>
                       {categories.map((category) => (
                         <SelectItem
                           key={category}
@@ -220,6 +233,7 @@ export default function SoftwareLibraryPage() {
                       software={item}
                       viewMode={viewMode}
                       onDelete={handleDeleteClick}
+                      onEdit={handleEdit}
                     />
                   ))}
                 </div>
@@ -277,7 +291,6 @@ export default function SoftwareLibraryPage() {
           </div>
         </div>
       </div>
-
       {/* Delete Confirmation Modal */}
       <DeleteModal
         open={deleteModalOpen}
@@ -285,6 +298,15 @@ export default function SoftwareLibraryPage() {
         onConfirm={handleConfirmDelete}
         isDeleting={deleteSoftware.isPending}
         itemName={softwareToDelete?.name}
+      />
+
+      <UploadModal
+        open={uploadModalOpen}
+        onOpenChange={(open) => {
+          setUploadModalOpen(open);
+          if (!open) setEditingSoftware(null);
+        }}
+        software={editingSoftware}
       />
     </div>
   );

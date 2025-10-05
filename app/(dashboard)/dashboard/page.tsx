@@ -34,6 +34,7 @@ export default function Dashboard() {
   const [softwareToDelete, setSoftwareToDelete] = useState<Software | null>(
     null
   );
+  const [editingSoftware, setEditingSoftware] = useState<Software | null>(null);
   const { toast } = useToast();
 
   // Fetch software data
@@ -50,6 +51,14 @@ export default function Dashboard() {
     if (item) {
       setSoftwareToDelete(item);
       setDeleteModalOpen(true);
+    }
+  };
+
+  const handleEdit = (id: string) => {
+    const item = software?.find((s) => s.id === id);
+    if (item) {
+      setEditingSoftware(item);
+      setUploadModalOpen(true);
     }
   };
 
@@ -184,6 +193,7 @@ export default function Dashboard() {
                           software={item}
                           onDelete={handleDeleteClick}
                           viewMode="list"
+                          onEdit={handleEdit}
                         />
                       ))}
 
@@ -263,7 +273,14 @@ export default function Dashboard() {
       </div>
 
       {/* Upload Modal */}
-      <UploadModal open={uploadModalOpen} onOpenChange={setUploadModalOpen} />
+      <UploadModal
+        open={uploadModalOpen}
+        onOpenChange={(open) => {
+          setUploadModalOpen(open);
+          if (!open) setEditingSoftware(null);
+        }}
+        software={editingSoftware}
+      />
 
       {/* Delete Confirmation Modal */}
       <DeleteModal

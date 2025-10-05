@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ImageIcon, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,21 +24,33 @@ import {
   SelectValue,
 } from "../ui/select";
 import { useToast } from "../ui/use-toast";
-import { useCreateSoftware } from "@/hooks/use-software";
+import { useCreateSoftware, useUpdateSoftware } from "@/hooks/use-software";
 import { softwareSchema, type SoftwareFormData } from "@/lib/validations";
+import type { Software } from "@/types/software";
 import Image from "next/image";
+import { useCategories } from "@/hooks/use-category";
 
 interface UploadModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  software?: Software | null;
 }
 
-export function UploadModal({ open, onOpenChange }: UploadModalProps) {
+export function UploadModal({
+  open,
+  onOpenChange,
+  software,
+}: UploadModalProps) {
   const { toast } = useToast();
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
 
   const createSoftware = useCreateSoftware();
+  const updateSoftware = useUpdateSoftware();
+  const { data: categories } = useCategories();
+
+  const isEditing = !!software;
+  const isLoading = createSoftware.isPending || updateSoftware.isPending;
 
   const {
     register,
@@ -56,37 +68,57 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
 
   const platform = watch("platform");
 
+  // Pre-fill form when editing
+  useEffect(() => {
+    if (software && open) {
+      setValue("name", software.name);
+      setValue("description", software.description);
+      setValue("version", software.version || "");
+      setValue("category", software.categoryId);
+      setValue("price", software.price.toString());
+      setValue("platform", software.platform);
+      setImagePreview(software.imageUrl);
+      setImageFile(null);
+    } else if (!open) {
+      reset();
+      setImageFile(null);
+      setImagePreview("");
+    }
+  }, [software, open, setValue, reset]);
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Check file size (5MB limit)
-      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      const maxSize = 5 * 1024 * 1024;
       if (file.size > maxSize) {
         toast({
           title: "File too large",
           description: "Please select an image smaller than 5MB.",
           variant: "destructive",
         });
-        e.target.value = ""; // Clear the input
+        e.target.value = "";
         return;
       }
 
-      // Check file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      const allowedTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/webp",
+      ];
       if (!allowedTypes.includes(file.type)) {
         toast({
           title: "Invalid file type",
           description: "Please select a JPEG, PNG, or WebP image.",
           variant: "destructive",
         });
-        e.target.value = ""; // Clear the input
+        e.target.value = "";
         return;
       }
 
       setImageFile(file);
       setValue("image", file);
 
-      // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -97,23 +129,43 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
 
   const onSubmit = async (data: SoftwareFormData) => {
     try {
-      await createSoftware.mutateAsync({
-        name: data.name,
-        description: data.description,
-        version: data.version,
-        category: data.category,
-        price: data.price,
-        platform: data.platform,
-        image: imageFile || undefined,
-      });
+      if (isEditing) {
+        await updateSoftware.mutateAsync({
+          id: software.id,
+          data: {
+            name: data.name,
+            description: data.description,
+            version: data.version,
+            category: data.category,
+            price: data.price,
+            platform: data.platform,
+            image: imageFile || undefined,
+          },
+        });
 
-      toast({
-        title: "Success! 🎉",
-        description: `${data.name} uploaded successfully!`,
-        className: "bg-blue-500 text-white",
-      });
+        toast({
+          title: "Updated!",
+          description: `${data.name} updated successfully!`,
+          className: "bg-green-500 text-white",
+        });
+      } else {
+        await createSoftware.mutateAsync({
+          name: data.name,
+          description: data.description,
+          version: data.version,
+          category: data.category,
+          price: data.price,
+          platform: data.platform,
+          image: imageFile || undefined,
+        });
 
-      // Reset form and close modal
+        toast({
+          title: "Success!",
+          description: `${data.name} uploaded successfully!`,
+          className: "bg-blue-500 text-white",
+        });
+      }
+
       reset();
       setImageFile(null);
       setImagePreview("");
@@ -121,46 +173,47 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to upload software",
+        description:
+          error.message ||
+          `Failed to ${isEditing ? "update" : "upload"} software`,
         variant: "destructive",
       });
     }
   };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={createSoftware.isPending ? undefined : onOpenChange}
-    >
+    <Dialog open={open} onOpenChange={isLoading ? undefined : onOpenChange}>
       <DialogContent
         className="sm:max-w-[600px] max-h-[90vh] bg-slate-900 border-slate-700 text-slate-100 flex flex-col"
-        onPointerDownOutside={
-          createSoftware.isPending ? (e) => e.preventDefault() : undefined
-        }
-        onEscapeKeyDown={
-          createSoftware.isPending ? (e) => e.preventDefault() : undefined
-        }
+        onPointerDownOutside={isLoading ? (e) => e.preventDefault() : undefined}
+        onEscapeKeyDown={isLoading ? (e) => e.preventDefault() : undefined}
       >
         <DialogHeader>
           <DialogTitle className="text-xl text-blue-400">
-            {createSoftware.isPending
-              ? "Uploading Software..."
+            {isLoading
+              ? isEditing
+                ? "Updating Software..."
+                : "Uploading Software..."
+              : isEditing
+              ? "Edit Software"
               : "Upload New Software"}
           </DialogTitle>
           <DialogDescription className="text-slate-400">
-            {createSoftware.isPending
-              ? "Please wait while we upload your software. Do not close this window."
+            {isLoading
+              ? "Please wait while we process your request. Do not close this window."
+              : isEditing
+              ? "Update the software details below"
               : "Fill in the details to add new software to your library"}
           </DialogDescription>
         </DialogHeader>
 
         <div className="overflow-y-auto pr-2 relative">
-          {createSoftware.isPending && (
+          {isLoading && (
             <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center">
               <div className="bg-slate-800 p-6 rounded-lg border border-slate-700 text-center">
                 <Loader2 className="h-8 w-8 animate-spin text-blue-400 mx-auto mb-3" />
                 <p className="text-slate-100 font-medium">
-                  Uploading Software...
+                  {isEditing ? "Updating Software..." : "Uploading Software..."}
                 </p>
                 <p className="text-slate-400 text-sm mt-1">
                   Please wait, do not close this window
@@ -226,15 +279,23 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
                 <Label htmlFor="category" className="text-slate-300">
                   Category *
                 </Label>
-                <Select onValueChange={(value) => setValue("category", value)}>
+                <Select
+                  onValueChange={(value) => setValue("category", value)}
+                  defaultValue={software?.categoryId}
+                >
                   <SelectTrigger className="bg-slate-800 border-slate-700 text-slate-100">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent className="bg-slate-800 border-slate-700">
-                    <SelectItem value="productivity" className="text-white cursor-pointer">Productivity</SelectItem>
-                    <SelectItem value="development" className="text-white cursor-pointer">Development</SelectItem>
-                    <SelectItem value="design" className="text-white cursor-pointer">Design</SelectItem>
-                    <SelectItem value="utilities" className="text-white cursor-pointer">Utilities</SelectItem>
+                    {categories?.map((cat) => (
+                      <SelectItem
+                        key={cat.id}
+                        value={cat.id}
+                        className="text-white cursor-pointer"
+                      >
+                        {cat.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 {errors.category && (
@@ -293,7 +354,10 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-slate-300">Software Image *</Label>
+              <Label className="text-slate-300">
+                Software Image *{" "}
+                {isEditing && "(Leave empty to keep current image)"}
+              </Label>
               <input
                 type="file"
                 accept="image/png,image/jpeg,image/jpg,image/webp"
@@ -306,13 +370,20 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
                 className="border-2 border-dashed border-slate-700 rounded-lg p-6 text-center hover:border-blue-500 transition-colors cursor-pointer block"
               >
                 {imagePreview ? (
-                  <Image
-                    src={imagePreview}
-                    alt="Preview"
-                    className="max-h-32 mx-auto rounded"
-                    width={500}
-                    height={158} //! Check this again
-                  />
+                  <div className="relative">
+                    <Image
+                      src={imagePreview}
+                      alt="Preview"
+                      className="max-h-32 mx-auto rounded"
+                      width={500}
+                      height={128}
+                    />
+                    {isEditing && !imageFile && (
+                      <p className="text-xs text-slate-500 mt-2">
+                        Click to change image
+                      </p>
+                    )}
+                  </div>
                 ) : (
                   <>
                     <ImageIcon className="h-8 w-8 text-slate-500 mx-auto mb-2" />
@@ -330,28 +401,28 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
               )}
             </div>
 
-            
-
             <div className="flex justify-end space-x-3 pt-4">
               <Button
                 type="button"
                 variant="ghost"
                 onClick={() => onOpenChange(false)}
-                disabled={createSoftware.isPending}
+                disabled={isLoading}
                 className="text-red-500"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                disabled={createSoftware.isPending}
+                disabled={isLoading}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
-                {createSoftware.isPending ? (
+                {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Uploading...
+                    {isEditing ? "Updating..." : "Uploading..."}
                   </>
+                ) : isEditing ? (
+                  "Update Software"
                 ) : (
                   "Upload Software"
                 )}
