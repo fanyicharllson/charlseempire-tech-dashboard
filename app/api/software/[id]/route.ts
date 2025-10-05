@@ -29,7 +29,7 @@ export async function DELETE(
     const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized! Please login to perform this action." }, { status: 401 });
     }
 
     const { id } = await params;
