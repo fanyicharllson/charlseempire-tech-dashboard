@@ -1,24 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
-import { v2 as cloudinary } from "cloudinary";
-
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-// Helper: Extract public_id from Cloudinary URL
-function getPublicIdFromUrl(url: string): string | null {
-  try {
-    const matches = url.match(/\/([^/]+)\.[^.]+$/);
-    return matches ? matches[1] : null;
-  } catch {
-    return null;
-  }
-}
+import { deleteImage } from "@/lib/cloudinary";
 
 // DELETE: Delete software by ID
 export async function DELETE(
@@ -48,17 +31,11 @@ export async function DELETE(
 
     // Delete image from Cloudinary if exists
     if (software.imageUrl) {
-      const publicId = getPublicIdFromUrl(software.imageUrl);
-      if (publicId) {
-        try {
-          await cloudinary.uploader.destroy(
-            `charlesempire-software-dashboard/${publicId}`
-          );
-          console.log("Deleted image from cloudinary!😎");
-        } catch (error) {
-          console.error("Failed to delete from Cloudinary:", error);
-          // Continue with database deletion even if Cloudinary fails
-        }
+      const deleted = await deleteImage(software.imageUrl);
+      if (deleted) {
+        console.log("Successfully deleted image from Cloudinary! 😎");
+      } else {
+        console.warn("Failed to delete image from Cloudinary, but continuing with database deletion");
       }
     }
 

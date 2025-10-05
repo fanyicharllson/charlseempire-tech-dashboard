@@ -3,14 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
 import { softwareSchema } from "@/lib/validations";
-import { v2 as cloudinary } from "cloudinary";
-
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+import { uploadImage, cleanupImage } from "@/lib/cloudinary";
 
 // Helper: Generate slug from name
 function generateSlug(name: string): string {
@@ -22,11 +15,16 @@ function generateSlug(name: string): string {
 
 // POST: Create new software
 export async function POST(request: Request) {
+  let imageUrl = ""; 
+  
   try {
     const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized! Please login to perform this action." }, { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized! Please login to perform this action." },
+        { status: 401 }
+      );
     }
 
     const formData = await request.formData();
@@ -44,23 +42,25 @@ export async function POST(request: Request) {
     const validated = softwareSchema.parse(data);
 
     // Upload image to Cloudinary
-    let imageUrl = "";
     if (validated.image) {
-      const bytes = await validated.image.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-
-      const result = await new Promise<any>((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream(
-          { folder: "charlesempire-software-dashboard" },
-          (error: any, result: any) => {
-            if (error) reject(error);
-            else resolve(result);
-          }
+      try {
+        imageUrl = await uploadImage(validated.image, {
+          folder: "charlesempire-software-dashboard",
+          maxWidth: 800,
+          maxHeight: 600,
+          quality: "auto:good",
+          timeout: 60000,
+        });
+      } catch (uploadError: any) {
+        return NextResponse.json(
+          {
+            error:
+              uploadError.message ||
+              "Failed to upload image. Please try again.",
+          },
+          { status: 500 }
         );
-        uploadStream.end(buffer);
-      });
-
-      imageUrl = result.secure_url;
+      }
     }
 
     // Generate slug
@@ -100,6 +100,20 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error("Software creation error:", error);
 
+    // Cleanup uploaded image if database operation failed
+    if (imageUrl) {
+      console.log(`Database operation failed, cleaning up uploaded image: ${imageUrl}`);
+      try {
+        await cleanupImage(imageUrl);
+        console.log("✅ Image cleanup completed successfully");
+      } catch (cleanupError) {
+        console.error("❌ Failed to cleanup image:", cleanupError);
+      }
+    } else {
+      console.log("No image to cleanup (imageUrl is empty)");
+    }
+
+    // Handle Zod validation errors
     if (error.name === "ZodError") {
       return NextResponse.json(
         { error: "Validation failed", details: error.errors },
@@ -107,8 +121,31 @@ export async function POST(request: Request) {
       );
     }
 
+    // Handle Cloudinary timeout specifically
+    if (error.message?.includes("Request Timeout") || error.http_code === 499) {
+      return NextResponse.json(
+        {
+          error:
+            "Image upload timed out. Please try with a smaller image or check your connection.",
+        },
+        { status: 408 }
+      );
+    }
+
+    // Handle database errors
+    if (error.code === "P2002") {
+      return NextResponse.json(
+        {
+          error:
+            "Software with this name already exists! Please try another name.",
+        },
+        { status: 409 }
+      );
+    }
+
+    // Generic error
     return NextResponse.json(
-      { error: "Failed to create software" },
+      { error: "Failed to create software. Please try again." },
       { status: 500 }
     );
   }

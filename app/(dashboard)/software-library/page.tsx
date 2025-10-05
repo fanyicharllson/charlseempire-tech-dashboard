@@ -134,11 +134,12 @@ export default function SoftwareLibraryPage() {
                       <SelectValue placeholder="Category" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-900 border-slate-700">
-                      <SelectItem value="all">All Categories</SelectItem>
+                      <SelectItem value="all" className="text-white">All Categories</SelectItem>
                       {categories.map((category) => (
                         <SelectItem
                           key={category}
                           value={(category ?? "").toLowerCase()}
+                          className="text-white bg-slate-900 border-slate-700"
                         >
                           {category}
                         </SelectItem>
@@ -241,12 +242,11 @@ export default function SoftwareLibraryPage() {
                       Try adjusting your search or filters
                     </p>
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       onClick={() => {
                         setSearchQuery("");
                         setCategoryFilter("all");
                       }}
-                      className="border-slate-700 text-slate-300 hover:bg-slate-800"
                     >
                       Clear Filters
                     </Button>
