@@ -7,12 +7,15 @@ export interface Software {
   platform: string[]
   price: number
   imageUrl: string
-  downloadUrl: string
+  downloadUrl: string //for mobile apps
   featured: boolean
   categoryId: string
   category?: Category
   createdAt: Date
   updatedAt: Date
+  webUrl?: string
+  tags?: string[] //programmming language e.g java, python
+  repoUrl?: string //github
 }
 
 export interface Category {
@@ -31,4 +34,8 @@ export interface CreateSoftwarePayload {
   price: string
   platform: string[]
   image?: File
+  webUrl?: string
+  tags?: string | string[]  // Form can send tags as string or array
+  repoUrl?: string
+  downloadUrl?: string
 }

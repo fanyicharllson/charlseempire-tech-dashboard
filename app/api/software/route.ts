@@ -29,11 +29,17 @@ export async function POST(request: Request) {
       category: formData.get("category") as string,
       price: formData.get("price") as string,
       platform: JSON.parse(formData.get("platform") as string) as string[],
+      webUrl: formData.get("webUrl") as string || undefined,
+      tags: formData.get("tags") as string || "",
+      repoUrl: formData.get("repoUrl") as string || undefined,
+      downloadUrl: formData.get("downloadUrl") as string || undefined,
       image: formData.get("image") as File | null,
     };
 
     // Validate data
     const validated = softwareSchema.parse(data);
+
+   
 
     // Upload image to Cloudinary
     if (validated.image) {
@@ -60,19 +66,19 @@ export async function POST(request: Request) {
     // Generate slug
     const slug = generateSlug(validated.name);
 
-    // Find category by slug to get the actual category ID
+    // Find category by ID to verify it exists
     const category = await db.category.findUnique({
-      where: { slug: validated.category },
+      where: { id: validated.category },
     });
 
     if (!category) {
       return NextResponse.json(
-        { error: `Category '${validated.category}' not found` },
+        { error: `Category with ID '${validated.category}' not found! Please select another category` },
         { status: 400 }
       );
     }
-
-    // Create software in database
+   
+    
     const software = await db.software.create({
       data: {
         name: validated.name,
@@ -82,13 +88,17 @@ export async function POST(request: Request) {
         platform: validated.platform,
         price: parseFloat(validated.price),
         imageUrl,
-        downloadUrl: "", // Will be added later
-        categoryId: category.id, // Use the actual category ID
+        downloadUrl: validated.downloadUrl || "",
+        webUrl: validated.webUrl,
+        tags: validated.tags || [], // Ensure it's always an array
+        repoUrl: validated.repoUrl,
+        categoryId: validated.category, // Use the category ID directly
       },
       include: {
         category: true,
       },
     });
+    
 
     return NextResponse.json(software, { status: 201 });
   } catch (error: any) {

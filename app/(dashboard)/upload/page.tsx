@@ -25,6 +25,7 @@ import { SoftwareFormData, softwareSchema } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
+import { useCategories } from "@/hooks/use-category";
 
 export default function UploadPage() {
   const { toast } = useToast();
@@ -33,6 +34,7 @@ export default function UploadPage() {
   const [imagePreview, setImagePreview] = useState<string>("");
 
   const createSoftware = useCreateSoftware();
+  const { data: categories } = useCategories();
 
   const {
     register,
@@ -45,6 +47,10 @@ export default function UploadPage() {
     resolver: zodResolver(softwareSchema),
     defaultValues: {
       platform: [],
+      webUrl: "",
+      tags: "",
+      repoUrl: "",
+      downloadUrl: "",
     },
   });
 
@@ -74,6 +80,10 @@ export default function UploadPage() {
         category: data.category,
         price: data.price,
         platform: data.platform,
+        webUrl: data.webUrl,
+        tags: data.tags,
+        repoUrl: data.repoUrl,
+        downloadUrl: data.downloadUrl,
         image: imageFile || undefined,
       });
 
@@ -89,7 +99,7 @@ export default function UploadPage() {
       setImagePreview("");
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: `Error 😥 ${user?.firstName || ""}!`,
         description: error.message || "Failed to upload software",
         variant: "destructive",
       });
@@ -189,30 +199,15 @@ export default function UploadPage() {
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-800 border-slate-700">
-                        <SelectItem
-                          value="productivity"
-                          className="text-white cursor-pointer"
-                        >
-                          Productivity
-                        </SelectItem>
-                        <SelectItem
-                          value="development"
-                          className="text-white cursor-pointer"
-                        >
-                          Development
-                        </SelectItem>
-                        <SelectItem
-                          value="design"
-                          className="text-white cursor-pointer"
-                        >
-                          Design
-                        </SelectItem>
-                        <SelectItem
-                          value="utilities"
-                          className="text-white cursor-pointer"
-                        >
-                          Utilities
-                        </SelectItem>
+                        {categories?.map((cat) => (
+                          <SelectItem
+                            key={cat.id}
+                            value={cat.id}
+                            className="text-white cursor-pointer"
+                          >
+                            {cat.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     {errors.category && (
@@ -270,6 +265,77 @@ export default function UploadPage() {
                       {errors.platform.message}
                     </p>
                   )}
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="webUrl" className="text-slate-300">
+                      Website URL
+                    </Label>
+                    <Input
+                      id="webUrl"
+                      placeholder="https://example.com"
+                      {...register("webUrl")}
+                      className="bg-slate-800 border-slate-700 text-slate-100"
+                    />
+                    {errors.webUrl && (
+                      <p className="text-red-400 text-xs">
+                        {errors.webUrl.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="repoUrl" className="text-slate-300">
+                      Repository URL
+                    </Label>
+                    <Input
+                      id="repoUrl"
+                      placeholder="https://github.com/username/repo"
+                      {...register("repoUrl")}
+                      className="bg-slate-800 border-slate-700 text-slate-100"
+                    />
+                    {errors.repoUrl && (
+                      <p className="text-red-400 text-xs">
+                        {errors.repoUrl.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="downloadUrl" className="text-slate-300">
+                      Download URL
+                    </Label>
+                    <Input
+                      id="downloadUrl"
+                      placeholder="https://example.com/download"
+                      {...register("downloadUrl")}
+                      className="bg-slate-800 border-slate-700 text-slate-100"
+                    />
+                    {errors.downloadUrl && (
+                      <p className="text-red-400 text-xs">
+                        {errors.downloadUrl.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="tags" className="text-slate-300">
+                      Programming Languages
+                    </Label>
+                    <Input
+                      id="tags"
+                      placeholder="java, python, javascript (comma-separated)"
+                      {...register("tags")}
+                      className="bg-slate-800 border-slate-700 text-slate-100"
+                    />
+                    {errors.tags && (
+                      <p className="text-red-400 text-xs">
+                        {errors.tags.message}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-2">

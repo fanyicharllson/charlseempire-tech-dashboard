@@ -27,6 +27,35 @@ export function useCreateSoftware() {
       formData.append("price", data.price);
       formData.append("platform", JSON.stringify(data.platform));
 
+      // Append new optional fields
+      if (data.webUrl) {
+        formData.append("webUrl", data.webUrl);
+      }
+      console.log(
+        "Hook CREATE SOFTWARE - data.tags:",
+        data.tags,
+        "Type:",
+        typeof data.tags
+      );
+      // Always append tags field, even if empty (to allow clearing)
+      let tagsToSend = "";
+      if (data.tags) {
+        if (typeof data.tags === "string" && data.tags.trim().length > 0) {
+          tagsToSend = data.tags;
+        } else if (Array.isArray(data.tags) && data.tags.length > 0) {
+          tagsToSend = data.tags.join(", ");
+        }
+      }
+      console.log("Hook CREATE - Sending tags:", tagsToSend);
+      formData.append("tags", tagsToSend);
+
+      if (data.repoUrl) {
+        formData.append("repoUrl", data.repoUrl);
+      }
+      if (data.downloadUrl) {
+        formData.append("downloadUrl", data.downloadUrl);
+      }
+
       if (data.image) {
         formData.append("image", data.image);
       }
@@ -69,6 +98,36 @@ export function useUpdateSoftware() {
       formData.append("category", data.category);
       formData.append("price", data.price);
       formData.append("platform", JSON.stringify(data.platform));
+
+      // Append new optional fields
+      if (data.webUrl) {
+        formData.append("webUrl", data.webUrl);
+      }
+      // Always append tags field, even if empty (to allow clearing)
+      console.log(
+        "Hook UPDATE - data.tags:",
+        data.tags,
+        "Type:",
+        typeof data.tags
+      );
+
+      let tagsToSend = "";
+      if (data.tags) {
+        if (typeof data.tags === "string" && data.tags.trim().length > 0) {
+          tagsToSend = data.tags;
+        } else if (Array.isArray(data.tags) && data.tags.length > 0) {
+          tagsToSend = data.tags.join(", ");
+        }
+      }
+
+      console.log("Hook UPDATE - Sending tags:", tagsToSend);
+      formData.append("tags", tagsToSend);
+      if (data.repoUrl) {
+        formData.append("repoUrl", data.repoUrl);
+      }
+      if (data.downloadUrl) {
+        formData.append("downloadUrl", data.downloadUrl);
+      }
 
       if (data.image) {
         formData.append("image", data.image);

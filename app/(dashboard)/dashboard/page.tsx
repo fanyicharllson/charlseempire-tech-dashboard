@@ -28,6 +28,7 @@ import { formatNumber } from "@/lib/utils";
 import { useToast } from "@/app/components/ui/use-toast";
 import type { Software } from "@/types/software";
 import { SoftwareDetailModal } from "@/app/components/dashboard/software-detail-modal";
+import { useRouter } from "next/navigation";
 
 export default function Dashboard() {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
@@ -45,6 +46,7 @@ export default function Dashboard() {
   // Fetch software data
   const { data: software, isLoading, isError, error } = useSoftware();
   const deleteSoftware = useDeleteSoftware();
+  const router = useRouter();
 
   // Calculate stats
   const totalSoftware = software?.length || 0;
@@ -214,8 +216,8 @@ export default function Dashboard() {
                       {totalSoftware > 3 && (
                         <div className="text-center pt-4">
                           <Button
-                            variant="outline"
-                            className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                            className="border-blue-700 text-white hover:bg-blue-800 bg-blue-700 transition-all duration-300"
+                            onClick={() => router.push("/software-library")}
                           >
                             View All Software ({totalSoftware})
                           </Button>

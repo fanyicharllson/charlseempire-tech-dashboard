@@ -22,6 +22,29 @@ export const softwareSchema = z.object({
     message: "Price must be a positive number",
   }),
   platform: z.array(z.string()).min(1, "Select at least one platform"),
+  webUrl: z
+    .string()
+    .optional()
+    .transform((val) => val === "" ? undefined : val)
+    .pipe(z.string().url("Please enter a valid URL").optional()),
+  tags: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val || val.trim() === "") return [];
+      const processed = val.split(",").map(tag => tag.trim()).filter(tag => tag.length > 0);
+      return processed;
+    }),
+  repoUrl: z
+    .string()
+    .optional()
+    .transform((val) => val === "" ? undefined : val)
+    .pipe(z.string().url("Please enter a valid repository URL").optional()),
+  downloadUrl: z
+    .string()
+    .optional()
+    .transform((val) => val === "" ? undefined : val)
+    .pipe(z.string().url("Please enter a valid download URL").optional()),
   image: z
     .union([
       z.instanceof(File),
@@ -49,7 +72,25 @@ export const softwareSchema = z.object({
     ),
 });
 
-export type SoftwareFormData = z.infer<typeof softwareSchema>;
+// Form input type (before validation transforms)
+export type SoftwareFormData = {
+  name: string;
+  description: string;
+  version: string;
+  category: string;
+  price: string;
+  platform: string[];
+  webUrl?: string;
+  tags?: string; // This is a string in the form, gets transformed to string[] for API
+  repoUrl?: string;
+  downloadUrl?: string;
+  image?: File;
+};
+
+// API data type (after validation transforms)
+export type SoftwareValidatedData = z.infer<typeof softwareSchema> & {
+  tags: string[]; // Always an array after validation
+};
 
 // Category validation schema
 export const categorySchema = z.object({

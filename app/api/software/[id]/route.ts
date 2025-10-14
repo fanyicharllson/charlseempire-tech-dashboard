@@ -112,6 +112,8 @@ export async function PUT(
     const { id } = await params;
 
     const formData = await request.formData();
+    
+    
     const data = {
       name: formData.get("name") as string,
       description: formData.get("description") as string,
@@ -119,11 +121,17 @@ export async function PUT(
       category: formData.get("category") as string,
       price: formData.get("price") as string,
       platform: JSON.parse(formData.get("platform") as string) as string[],
+      webUrl: formData.get("webUrl") as string || undefined,
+      tags: formData.get("tags") as string || "",
+      repoUrl: formData.get("repoUrl") as string || undefined,
+      downloadUrl: formData.get("downloadUrl") as string || undefined,
       image: formData.get("image") as File | null,
     };
 
+
     // Validate data
     const validated = softwareSchema.parse(data);
+   
 
     // Get existing software
     const existing = await db.software.findUnique({
@@ -181,6 +189,8 @@ export async function PUT(
         : existing.slug;
 
     // Update software
+    console.log("About to update software with tags:", validated.tags);
+    
     const software = await db.software.update({
       where: { id },
       data: {
@@ -191,13 +201,18 @@ export async function PUT(
         platform: validated.platform,
         price: parseFloat(validated.price),
         imageUrl,
-        downloadUrl: "",
+        downloadUrl: validated.downloadUrl || existing.downloadUrl,
+        webUrl: validated.webUrl,
+        tags: validated.tags || [], // Ensure it's always an array
+        repoUrl: validated.repoUrl,
         categoryId: validated.category,
       },
       include: {
         category: true,
       },
     });
+    
+    console.log("Updated software with tags:", software.tags);
 
     return NextResponse.json(software);
   } catch (error: any) {

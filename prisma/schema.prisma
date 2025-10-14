@@ -39,6 +39,9 @@ model Software {
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  webUrl      String?   // Optional web URL
+  tags        String[]  // Optional tags array  
+  repoUrl     String?   // Optional repository URL
   
   @@index([categoryId])
   @@index([slug])

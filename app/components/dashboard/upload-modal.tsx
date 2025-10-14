@@ -29,6 +29,7 @@ import { softwareSchema, type SoftwareFormData } from "@/lib/validations";
 import type { Software } from "@/types/software";
 import Image from "next/image";
 import { useCategories } from "@/hooks/use-category";
+import { useUser } from "@clerk/nextjs";
 
 interface UploadModalProps {
   open: boolean;
@@ -44,6 +45,8 @@ export function UploadModal({
   const { toast } = useToast();
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
+    const { user } = useUser();
+  
 
   const createSoftware = useCreateSoftware();
   const updateSoftware = useUpdateSoftware();
@@ -63,6 +66,10 @@ export function UploadModal({
     resolver: zodResolver(softwareSchema),
     defaultValues: {
       platform: [],
+      webUrl: "",
+      tags: "",
+      repoUrl: "",
+      downloadUrl: "",
     },
   });
 
@@ -77,6 +84,10 @@ export function UploadModal({
       setValue("category", software.categoryId);
       setValue("price", software.price.toString());
       setValue("platform", software.platform);
+      setValue("webUrl", software.webUrl || "");
+      setValue("tags", software.tags?.join(", ") || "");
+      setValue("repoUrl", software.repoUrl || "");
+      setValue("downloadUrl", software.downloadUrl || "");
       setImagePreview(software.imageUrl);
       setImageFile(null);
     } else if (!open) {
@@ -139,14 +150,18 @@ export function UploadModal({
             category: data.category,
             price: data.price,
             platform: data.platform,
+            webUrl: data.webUrl,
+            tags: data.tags,
+            repoUrl: data.repoUrl,
+            downloadUrl: data.downloadUrl,
             image: imageFile || undefined,
           },
         });
 
         toast({
-          title: "Updated!",
+          title:  `Updated 🎉 ${user?.firstName || ""}!`,
           description: `${data.name} updated successfully!`,
-          className: "bg-green-500 text-white",
+          className: "bg-blue-500 text-white",
         });
       } else {
         await createSoftware.mutateAsync({
@@ -156,11 +171,15 @@ export function UploadModal({
           category: data.category,
           price: data.price,
           platform: data.platform,
+          webUrl: data.webUrl,
+          tags: data.tags,
+          repoUrl: data.repoUrl,
+          downloadUrl: data.downloadUrl,
           image: imageFile || undefined,
         });
 
         toast({
-          title: "Success!",
+          title: `Success 🎉 ${user?.firstName || ""}!`,
           description: `${data.name} uploaded successfully!`,
           className: "bg-blue-500 text-white",
         });
@@ -172,7 +191,7 @@ export function UploadModal({
       onOpenChange(false);
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: `Error 😥 ${user?.firstName || ""}!`,
         description:
           error.message ||
           `Failed to ${isEditing ? "update" : "upload"} software`,
@@ -351,6 +370,76 @@ export function UploadModal({
                   {errors.platform.message}
                 </p>
               )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="webUrl" className="text-slate-300">
+                  Website URL
+                </Label>
+                <Input
+                  id="webUrl"
+                  placeholder="https://example.com"
+                  {...register("webUrl")}
+                  className="bg-slate-800 border-slate-700 text-slate-100"
+                />
+                {errors.webUrl && (
+                  <p className="text-red-400 text-xs">
+                    {errors.webUrl.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="repoUrl" className="text-slate-300">
+                  Repository URL
+                </Label>
+                <Input
+                  id="repoUrl"
+                  placeholder="https://github.com/username/repo"
+                  {...register("repoUrl")}
+                  className="bg-slate-800 border-slate-700 text-slate-100"
+                />
+                {errors.repoUrl && (
+                  <p className="text-red-400 text-xs">
+                    {errors.repoUrl.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="downloadUrl" className="text-slate-300">
+                  Download URL
+                </Label>
+                <Input
+                  id="downloadUrl"
+                  placeholder="https://example.com/download"
+                  {...register("downloadUrl")}
+                  className="bg-slate-800 border-slate-700 text-slate-100"
+                />
+                {errors.downloadUrl && (
+                  <p className="text-red-400 text-xs">
+                    {errors.downloadUrl.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="tags" className="text-slate-300">
+                  Programming Languages
+                </Label>
+                <Input
+                  id="tags"
+                  placeholder="java, python, javascript (comma-separated)"
+                  {...register("tags")}
+                  className="bg-slate-800 border-slate-700 text-slate-100"
+                />
+                {errors.tags && (
+                  <p className="text-red-400 text-xs">{errors.tags.message}</p>
+                )}
+              </div>
             </div>
 
             <div className="space-y-2">
